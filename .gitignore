@@ -1,1 +1,5 @@
-/target
+/build
+/dist
+/medium_to_markdown_py.egg-info
+/.venv
+.env
