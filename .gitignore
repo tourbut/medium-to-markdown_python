@@ -3,3 +3,4 @@
 /medium_to_markdown_py.egg-info
 /.venv
 .env
+tester.py

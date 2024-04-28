@@ -14,14 +14,17 @@ pip install medium-to-markdown-py
 
 The command-line interface (CLI) accepts a Medium blog post URL and a filename as input and generates the Markdown content.
 
-```
-medium-to-markdown <URL> <file_name> <>
-```
+``` python
+from medium_to_markdown import MediumParser
 
-Replace <URL> with the URL of the Medium blog post you want to convert, and <file_name> with the desired filename for the Markdown output.
+url = "https://~~~~"
+filename = ""
+is_image_download = True
+ssl_verify = True
 
-## Example
+parser = MediumParser(url, filename, is_image_download, ssl_verify)
 
-```
-medium-to-markdown 
+if parser.parse_and_savefile():
+    print("Parsing is done.")
+
 ```

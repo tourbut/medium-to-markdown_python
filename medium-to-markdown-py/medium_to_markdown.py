@@ -4,38 +4,59 @@ from bs4 import BeautifulSoup, Tag, NavigableString
 import requests
 import shutil
 import os
-import argparse
-
+import re
 class MediumParser:
     
     IMAGE_SEQUENCE = 0
     OUTPUT_DIR = "medium/origin_md"
     
-    def __init__(self, url, output_filename, is_image_download=False,ssl_verify=False):
+    def __init__(self, url, output_filename="", is_image_download=False,ssl_verify=False,headers={'User-Agent': 'Mozilla/5.0'}):
+        """
+            Initialize a MediumParser object.
+
+            Parameters:
+            - url (str): The URL of the Medium article to convert to Markdown.
+            - output_filename (str): The desired filename for the output Markdown file. If not provided, a default filename will be used.
+            - is_image_download (bool): Flag indicating whether to download images referenced in the article. Default is False.
+            - ssl_verify (bool): Flag indicating whether to verify SSL certificates when making requests. Default is False.
+            - headers (dict): Custom headers to include in the HTTP requests. Default is {'User-Agent': 'Mozilla/5.0'}.
+        """
         self.url = url
-        self.output_filename = output_filename
         self.is_image_download = is_image_download
         self.ssl_verify = ssl_verify
+        self.headers = headers
         self.current_date = datetime.now().strftime("%Y-%m-%d")
         self.title=""
         self.author=""
+        self.output_filename=output_filename
         
-        if self.output_filename.endswith(".md"):
-            self.output_filename = self.output_filename[:-3]
-            
-        self.output_filename = f"{self.current_date}-{self.output_filename[:-3]}"
-        
+        if self.output_filename != "":
+            if self.output_filename.endswith(".md"):
+                self.output_filename = self.output_filename[:-3]
+                
+            self.output_filename = f"{self.current_date}-{self.output_filename}"
+
 
     def parse_and_savefile(self):
+        """
+        Parses the Medium post, saves it as a Markdown file, and returns True if successful, False otherwise.
+        """
         try:
             dom = self.get_dom(self.url)
+            self.get_meta(dom)
+            
+            if self.output_filename == "":
+                self.output_filename = re.sub(r'[<>:"/\\|?*]', '', self.title).replace(" ", "_")
+                output_filename = f"{self.OUTPUT_DIR}/{self.current_date}-{self.output_filename}.md"
+            else:
+                output_filename = f"{self.OUTPUT_DIR}/{self.output_filename}.md"
+                
             parsed_post = self.parse_medium_post(dom)
-            output_filename = f"{self.OUTPUT_DIR}/{self.output_filename}.md"
             
             if not os.path.exists(os.path.dirname(output_filename)):
                 os.makedirs(os.path.dirname(output_filename))
             
-            with open(output_filename, "w",encoding='utf-8') as f:
+            with open(output_filename, "w", encoding='utf-8') as f:
                 f.write(parsed_post)
                 
             return True
@@ -44,16 +65,24 @@ class MediumParser:
             return False
 
     def get_dom(self,url):
-        response = requests.get(url, verify=self.ssl_verify)
+        response = requests.get(url, verify=self.ssl_verify,headers=self.headers)
         response.raise_for_status()
         return BeautifulSoup(response.text, 'html.parser')
-
+    
+    def get_meta(self,dom):
+        try:
+            title_tag = dom.find('meta', {'name': 'title'})
+            author_tag = dom.find('meta', {'name': 'author'})
+            self.title = title_tag['content'] if title_tag else ''
+            self.author = author_tag['content'] if author_tag else ''
+            return True
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
+        
     def parse_medium_post(self,dom):
         parsed_post = []
-        title_tag = dom.find('meta', {'name': 'title'})
-        author_tag = dom.find('meta', {'name': 'author'})
-        self.title = title_tag['content'] if title_tag else ''
-        self.author = author_tag['content'] if author_tag else ''
+        
         for node in dom.children:
             content = self.parse_dom(node)
             if content:
@@ -92,7 +121,7 @@ class MediumParser:
                         if self.is_image_download==False:
                             parsed_content.append(f"![Medium-Image]({link.strip()})\n")
                         else:
-                            response = requests.get(link.strip(), stream=True,verify=self.ssl_verify)
+                            response = requests.get(link.strip(), stream=True,verify=self.ssl_verify,headers=self.headers)
                             if response.status_code == 200:
 
                                 filename = f"{self.output_filename}_{self.IMAGE_SEQUENCE}.png"
@@ -104,7 +133,7 @@ class MediumParser:
                                     
                                 del response
 
-                                parsed_content.append(f"![Medium-Image]({local_image_path})\n")
+                                parsed_content.append(f"![Medium-Image](image/{filename})\n")
                                 self.IMAGE_SEQUENCE += 1
             else:
                 for child in node.children:
@@ -145,21 +174,3 @@ class MediumParser:
             if text:
                 result.append(text)
         return ''.join(result)
-
-if __name__ == "__main__":
-    print("Medium to Markdown Parser")
-    print("Start parsing...")
-    
-    arg_parser = argparse.ArgumentParser(description="Medium to Markdown Parser")
-    arg_parser.add_argument("--url", help="Medium post URL",required=True)
-    arg_parser.add_argument("--filename", help="Output filename",required=True)
-    arg_parser.add_argument("--is_image_download", help="Image download option(Y or N)", default="N",required=False)
-    arg_parser.add_argument("--ssl_verify", help="SSL Verify option(Y or N)", default="N",required=False)
-    args = arg_parser.parse_args()
-    
-    parser = MediumParser(args.url, args.filename, 
-                            False if args.is_image_download.upper() == "N" else True, 
-                            False if args.ssl_verify.upper() == "N" else True)
-    
-    if parser.parse_and_savefile():
-        print("Parsing is done.")
