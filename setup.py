@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='medium-to-markdown-py',
-    version='1.0.0',
-    description='medium-to-markdown-py is a Python package that converts Medium articles to Markdown format.',
+    name='medium_to_markdown_py',
+    version='1.1.0',
+    description='medium-to-medium_to_markdown_py-py is a Python package that converts Medium articles to Markdown format.',
     author='knowslog',
     author_email='scshin88@gmail.com',
     url='https://github.com/tourbut/medium-to-markdown_python',

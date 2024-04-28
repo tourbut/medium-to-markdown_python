@@ -4,3 +4,4 @@
 /.venv
 .env
 tester.py
+*.pyc

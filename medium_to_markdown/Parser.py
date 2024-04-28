@@ -5,6 +5,7 @@ import requests
 import shutil
 import os
 import re
+
 class MediumParser:
     
     IMAGE_SEQUENCE = 0

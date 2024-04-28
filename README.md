@@ -15,7 +15,7 @@ pip install medium-to-markdown-py
 The command-line interface (CLI) accepts a Medium blog post URL and a filename as input and generates the Markdown content.
 
 ``` python
-from medium_to_markdown import MediumParser
+from medium_to_markdown.Parser import MediumParser
 
 url = "https://~~~~"
 filename = ""
