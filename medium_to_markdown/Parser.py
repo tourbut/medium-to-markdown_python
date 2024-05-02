@@ -11,13 +11,20 @@ class MediumParser:
     IMAGE_SEQUENCE = 0
     OUTPUT_DIR = "medium/origin_md"
     
-    def __init__(self, url, output_filename="", is_image_download=False,ssl_verify=False,headers={'User-Agent': 'Mozilla/5.0'}):
+    def __init__(self, url, output_dir = "medium/origin_md",
+                 output_filename="", 
+                 link_image_path="image",
+                 is_image_download=False,
+                 ssl_verify=False,
+                 headers={'User-Agent': 'Mozilla/5.0'}):
         """
             Initialize a MediumParser object.
 
             Parameters:
             - url (str): The URL of the Medium article to convert to Markdown.
+            - output_dir (str): The directory where the output Markdown file will be saved. Default is 'medium/origin_md'.
             - output_filename (str): The desired filename for the output Markdown file. If not provided, a default filename will be used.
+            - link_image_path (str): The path to the image directory where the downloaded images will be saved. Default is 'image'.
             - is_image_download (bool): Flag indicating whether to download images referenced in the article. Default is False.
             - ssl_verify (bool): Flag indicating whether to verify SSL certificates when making requests. Default is False.
             - headers (dict): Custom headers to include in the HTTP requests. Default is {'User-Agent': 'Mozilla/5.0'}.
@@ -30,6 +37,8 @@ class MediumParser:
         self.title=""
         self.author=""
         self.output_filename=output_filename
+        self.OUTPUT_DIR = output_dir
+        self.link_image_path = link_image_path
         
         if self.output_filename != "":
             if self.output_filename.endswith(".md"):
@@ -38,9 +47,11 @@ class MediumParser:
             self.output_filename = f"{self.current_date}-{self.output_filename}"
 
 
-    def parse_and_savefile(self):
+    def parse(self,is_save=True):
         """
         Parses the Medium post, saves it as a Markdown file, and returns True if successful, False otherwise.
+        Parameters:
+        - is_save (bool): Flag indicating whether to save the output Markdown file. Default is True.
         """
         try:
             dom = self.get_dom(self.url)
@@ -52,15 +63,18 @@ class MediumParser:
             else:
                 output_filename = f"{self.OUTPUT_DIR}/{self.output_filename}.md"
                 
+            
             parsed_post = self.parse_medium_post(dom)
-            
-            if not os.path.exists(os.path.dirname(output_filename)):
-                os.makedirs(os.path.dirname(output_filename))
-            
-            with open(output_filename, "w", encoding='utf-8') as f:
-                f.write(parsed_post)
                 
-            return True
+            if is_save:
+                if not os.path.exists(os.path.dirname(output_filename)):
+                    os.makedirs(os.path.dirname(output_filename))
+                with open(output_filename, "w", encoding='utf-8') as f:
+                    f.write(parsed_post)
+                return True
+            else:
+                return parsed_post
+            
         except Exception as e:
             print(f"An error occurred: {e}")
             return False
@@ -134,7 +148,7 @@ class MediumParser:
                                     
                                 del response
 
-                                parsed_content.append(f"![Medium-Image](image/{filename})\n")
+                                parsed_content.append(f"![Medium-Image]({self.link_image_path}/{filename})\n")
                                 self.IMAGE_SEQUENCE += 1
             else:
                 for child in node.children:
