@@ -5,3 +5,5 @@
 .env
 tester.py
 *.pyc
+/medium
+*test*
