@@ -47,14 +47,18 @@ class MediumParser:
             self.output_filename = f"{self.current_date}-{self.output_filename}"
 
 
-    def parse(self,is_save=True):
+    def parse(self,txt_html="",is_save=True):
         """
         Parses the Medium post, saves it as a Markdown file, and returns True if successful, False otherwise.
         Parameters:
+        - txt_html (str): The HTML content of the Medium article. If not provided, the content will be fetched from the URL.
         - is_save (bool): Flag indicating whether to save the output Markdown file. Default is True.
         """
         try:
-            dom = self.get_dom(self.url)
+            if txt_html:
+                dom = BeautifulSoup(txt_html, 'html.parser')
+            else:
+                dom = self.get_dom(self.url)
             self.get_meta(dom)
             
             if self.output_filename == "":
@@ -86,8 +90,10 @@ class MediumParser:
     
     def get_meta(self,dom):
         try:
+            url_tag = dom.find('meta', {'property': 'og:url'})
             title_tag = dom.find('meta', {'name': 'title'})
             author_tag = dom.find('meta', {'name': 'author'})
+            self.url = url_tag['content'] if self.url=="" else self.url
             self.title = title_tag['content'] if title_tag else ''
             self.author = author_tag['content'] if author_tag else ''
             return True
