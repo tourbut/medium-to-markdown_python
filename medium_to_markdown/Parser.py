@@ -129,6 +129,10 @@ class MediumParser:
                     text = self.extract_inline(node)
                     if text:
                         parsed_content.append(f"\n{text.strip()}\n")
+            elif node.name == "li":
+                text = self.extract_inline(node)
+                if text:
+                    parsed_content.append(f"\n- {text}\n\n")
             elif node.name == "pre":
                 text = self.extract_inline(node)
                 if text:
@@ -182,6 +186,10 @@ class MediumParser:
             elif node.name == "code":
                 text = self.parse_formatting_text(node)
                 return f"`{text.strip()}` "
+            elif node.name == "a":
+                text = self.parse_formatting_text(node)
+                url = node.get('href')
+                return f"[{text}]({url}) "
             else:
                 text = self.parse_formatting_text(node)
                 return text
