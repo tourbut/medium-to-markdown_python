@@ -68,7 +68,7 @@ class MediumParser:
                 output_filename = f"{self.OUTPUT_DIR}/{self.output_filename}.md"
                 
             
-            parsed_post = self.parse_medium_post(dom)
+            parsed_post = self.parse_medium_post(dom,is_save)
                 
             if is_save:
                 if not os.path.exists(os.path.dirname(output_filename)):
@@ -101,16 +101,18 @@ class MediumParser:
             print(f"An error occurred: {e}")
             return False
         
-    def parse_medium_post(self,dom):
+    def parse_medium_post(self,dom,is_save):
         parsed_post = []
         
         for node in dom.children:
             content = self.parse_dom(node)
             if content:
                 parsed_post.append(content)
-      
-        parsed_post.insert(0, f"---\ntitle: {self.title}\nauthor: {self.author}\ndate: {self.current_date}\nurl: {self.url}\n---\n")
-        return '\n'.join(parsed_post)
+        if is_save:
+            return {"title":self.title,"author":self.author,"contents":'\n'.join(parsed_post),"date":self.current_date,"url":self.url}
+        else:
+            parsed_post.insert(0, f"---\ntitle: {self.title}\nauthor: {self.author}\ndate: {self.current_date}\nurl: {self.url}\n---\n")
+            return '\n'.join(parsed_post)
 
     def parse_dom(self,node):
         parsed_content = []
