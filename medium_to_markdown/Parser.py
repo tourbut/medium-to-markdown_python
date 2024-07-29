@@ -47,7 +47,7 @@ class MediumParser:
             self.output_filename = f"{self.current_date}-{self.output_filename}"
 
 
-    def parse(self,txt_html="",is_save=True):
+    def parse(self,txt_html="",is_savefile=True,is_get_dom=False):
         """
         Parses the Medium post, saves it as a Markdown file, and returns True if successful, False otherwise.
         Parameters:
@@ -67,17 +67,18 @@ class MediumParser:
             else:
                 output_filename = f"{self.OUTPUT_DIR}/{self.output_filename}.md"
                 
-            
-            parsed_post = self.parse_medium_post(dom,is_save)
+            parsed_post = self.parse_medium_post(dom,is_savefile)
                 
-            if is_save:
+            if is_savefile:
                 if not os.path.exists(os.path.dirname(output_filename)):
                     os.makedirs(os.path.dirname(output_filename))
                 with open(output_filename, "w", encoding='utf-8') as f:
                     f.write(parsed_post)
-                return True
+                    
+            if is_get_dom:
+                return parsed_post,dom
             else:
-                return parsed_post
+                return parsed_post,None
             
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -101,14 +102,14 @@ class MediumParser:
             print(f"An error occurred: {e}")
             return False
         
-    def parse_medium_post(self,dom,is_save):
+    def parse_medium_post(self,dom,is_savefile):
         parsed_post = []
         
         for node in dom.children:
             content = self.parse_dom(node)
             if content:
                 parsed_post.append(content)
-        if is_save:
+        if is_savefile:
             return {"title":self.title,"author":self.author,"contents":'\n'.join(parsed_post),"date":self.current_date,"url":self.url}
         else:
             parsed_post.insert(0, f"---\ntitle: {self.title}\nauthor: {self.author}\ndate: {self.current_date}\nurl: {self.url}\n---\n")
