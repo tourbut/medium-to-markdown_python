@@ -15,7 +15,7 @@ class MediumParser:
                  output_filename="", 
                  link_image_path="image",
                  is_image_download=False,
-                 ssl_verify=False,
+                 ssl_verify=True,
                  headers={'User-Agent': 'Mozilla/5.0'}):
         """
             Initialize a MediumParser object.
@@ -110,10 +110,10 @@ class MediumParser:
             if content:
                 parsed_post.append(content)
         if is_savefile:
-            return {"title":self.title,"author":self.author,"contents":'\n'.join(parsed_post),"date":self.current_date,"url":self.url}
-        else:
             parsed_post.insert(0, f"---\ntitle: {self.title}\nauthor: {self.author}\ndate: {self.current_date}\nurl: {self.url}\n---\n")
             return '\n'.join(parsed_post)
+        else:
+            return {"title":self.title,"author":self.author,"contents":'\n'.join(parsed_post),"date":self.current_date,"url":self.url}
 
     def parse_dom(self,node):
         parsed_content = []
